@@ -49,8 +49,9 @@
 			#svgWorld {
 				position: absolute;
 				right: 0px;
+				left: 560px;
 				top: 40px;
-				width: 80%;
+				width: 100%;
 				height: 100%;
 				border: solid 1px;
 				overflow: hidden;
@@ -61,13 +62,24 @@
 				position: absolute;
 				left: 0px;
 				top: 40px;
-				width: 20%;
+				width: 280px;
 				height: 100%;
 				border: solid 1px;
 				overflow: hidden;
 				background-color: rgb(0,0,255);
 			}
 			
+			#programa{
+				position: absolute;
+				left: 280px;
+				top: 40px;
+				width: 280px;
+				height: 100%;
+				border: solid 1px;
+				box-sizing: border-box;
+				border: none;
+			}
+
 		</style>
 		
 	</head>
@@ -80,14 +92,72 @@
 			</div>
 		</div>
 		<svg id="svgJoystick">
-			<circle class="control" id="adelante" args="10" fill="#ff00ff" cx="100" cy="50" r="5%">
-			</circle>
-			<circle class="control" id="derecha" args="10" fill="#ff00ff" cx="150" cy="100" r="5%">
-			</circle>
-			<circle class="control" id="atras" args="10" fill="#ff00ff" cx="100" cy="150" r="5%">
-			</circle>
-			<circle class="control" id="izquierda" args="10" fill="#ff00ff" cx="50" cy="100" r="5%">
-			</circle>
+			
+			<!--path class="control" id="adelante" args="10" fill="#ff00ff" d="M 50,50 L 90,0   L 130,50 L 110,50 L 110,90 L 70,90 L 70,50 Z" stroke-width="1" fill="none" stroke="black" style="vector-effect:non-scaling-stroke;"/-->
+			
+			<path style="vector-effect:non-scaling-stroke;"
+				stroke-width="1"
+				stroke="black" 
+				fill="#ff00ff"
+				
+				d="M 0,0   L 40,-50 L 80,0   L 60,0   L 60,40  L 20,40 L 20,0 Z"
+				transform="translate(100,70)"
+				
+				class="control"
+				id="adelante"
+				comando="adelante(10)"
+			/>
+
+			<path style="vector-effect:non-scaling-stroke;"
+				stroke-width="1"
+				stroke="black" 
+				fill="#ff00ff"
+				
+				d="M 0,0   L 40,-50 L 80,0   L 60,0   L 60,40  L 20,40 L 20,0 Z"
+				transform="rotate(180,180,250) translate(180,250)"
+				
+				class="control"
+				id="atras"
+				comando="atras(10)"
+			/>
+				
+			
+			<path style="vector-effect:non-scaling-stroke;"
+				stroke-width="1"
+				stroke="black" 
+				fill="#ff00ff"
+				
+				d="M 0,0   L 40,-50 L 80,0   L 60,0   L 60,40  L 20,40 L 20,0 Z"
+				transform="rotate(90,230,120) translate(230,120)"
+				
+				class="control"
+				id="derecha"
+				comando="derecha(10)"
+			/>
+
+			<path style="vector-effect:non-scaling-stroke;"
+				stroke-width="1"
+				stroke="black" 
+				fill="#ff00ff"
+				
+				d="M 0,0   L 40,-50 L 80,0   L 60,0   L 60,40  L 20,40 L 20,0 Z"
+				transform="rotate(270,50,200) translate(50,200)"
+				
+				class="control"
+				id="izquierda"
+				comando="izquierda(10)"
+			/>
+
+
+			<!-- circle class="control" id="adelante" args="10" fill="#ff00ff" cx="100" cy="50" r="5%">
+			</circle -->
+			<!-- circle class="control" id="atras" args="10" fill="#ff00ff" cx="100" cy="150" r="5%">
+			</circle-->
+
+			<!-- circle class="control" id="derecha" args="10" fill="#ff00ff" cx="150" cy="100" r="5%">
+			</circle-->
+			<!-- circle class="control" id="izquierda" args="10" fill="#ff00ff" cx="50" cy="100" r="5%">
+			</circle-->
 		</svg>
 		
 		<svg id="svgWorld" >
@@ -98,8 +168,9 @@
 				</circle>
 				<line x1="0" y1="0" x2="20" y2="0" style="stroke:#0000ff;stroke-width:5" />
 			</g>
-			<path id="trazo" d="M 300 150" stroke="blue" stroke-width="1" fill="none" />
 		</svg>
+		
+		<textarea id="programa"></textarea>
 	</body>
 	
 	
@@ -118,7 +189,7 @@
 				return false;
 			});
 
-			$(document).on('keydown', (function(e) {
+			$('#svgWorld').on('keydown', (function(e) {
 			
 				switch(e.which) {
 					case 37:
@@ -151,8 +222,15 @@
 			
 			$('.control').on('click', function(){
 				
-				automata[$(this).attr('id')](parseFloat($(this).attr('args')));
-			
+				
+				
+				var comando = "automata." + $(this).attr('comando');
+				eval(comando);
+
+
+				console.log($(this).attr('comando') );
+				$('#programa').focus();
+				$('#programa').val($('#programa').val() + '\n' + $(this).attr('comando'))
 			});
 
 
@@ -164,79 +242,117 @@
 			
 
 			automata = {
+				
 				ui: (function () {
 					
-
-
 					var ui = Snap("#svgWorld>#automata");
 
 					return ui;
 				}()),
-				angulo: 0,
-				posicion: function(){
-					var bb = this.ui.getBBox();
 
-					var pos = {
-						x: (bb.x + (bb.width / 2)),
-						y: (bb.y + (bb.height / 2))
-					};
+				_ancho: 1,
+				ancho: function(_ancho){
+					
+					if(typeof(_ancho) != "undefined"){
+						this._ancho =_ancho;
+					}
+
+					return this._ancho;
+				},
+				
+
+				pintar: true,
+				_angulo: 0,
+				angulo: function(_angulo){
+					
+					if(typeof(_angulo)!="undefined"){
+						
+						var pos = this.posicion();
+
+						this.ui.transform( 'T' + pos.x + ',' + pos.y + 'R' + _angulo + "," + pos.x + ',' + pos.y);
+
+						this._angulo = _angulo;
+					}
+
+					return this._angulo;
+				},
+
+				posicion: function(pos){
+					
+					if(typeof(pos)=="undefined"){
+						var bb = this.ui.getBBox();
+
+						var pos = {
+							x: (bb.x + (bb.width / 2)),
+							y: (bb.y + (bb.height / 2))
+						};
+					}else{
+						
+						this.ui.transform( 'T' + pos.x + ',' + pos.y + 'R' + this.angulo() + "," + pos.x + ',' + pos.y);
+					}
 					return pos;
 				},
+
 				adelante: function (step){
 					
-					console.log("automata.adelante(10);");
-
+					step = parseFloat(step);
 
 					var pos = {
-						x: Math.cos(this.angulo/180*3.1415) * step,
-						y: Math.sin(this.angulo/180*3.1415) * step,
+						x: Math.cos(this.angulo() / 180*3.1415) * step,
+						y: Math.sin(this.angulo() / 180*3.1415) * step,
 					};
 
 					this.mover(pos);
 				},
+
 				atras: function (step){
-					console.log("automata.atras(10);");
-
-
 					this.adelante(-step);
-
-
 				},
+
 				derecha: function (step){
-					console.log("automata.derecha(10);");
+					step = parseFloat(step);
 					
 					var pos = this.posicion();
 
-					this.angulo += step;
-					if(this.angulo>360)this.angulo-=360;
-					if(this.angulo<0)this.angulo+=360;
-					this.ui.transform( 'T' + pos.x + ',' + pos.y + 'R' + this.angulo + "," + pos.x + ',' + pos.y);
+					this._angulo += step;
+					if(this._angulo>360)this._angulo-=360;
+					if(this._angulo<0)this._angulo+=360;
+					this.ui.transform( 'T' + pos.x + ',' + pos.y + 'R' + this._angulo + "," + pos.x + ',' + pos.y);
 
 				},
+
 				izquierda: function (step){
-					console.log("automata.izquierda(10);");
 					this.derecha(-step);
 				},
-				mover: function(step){
-					var pos = this.posicion();
 
-					var pos = {
-						x: pos.x + (step.x),
-						y: pos.y + (step.y)
+				mover: function(step){
+					
+
+
+					var pos1 = this.posicion();
+
+					var pos2 = {
+						x: pos1.x + (step.x),
+						y: pos1.y + (step.y)
 					};
 					
 					
-					this.ui.transform( 'T' + pos.x + ',' + pos.y + 'R' + this.angulo + "," + pos.x + ',' + pos.y);
+					
+					if(this.pintar){
+						var svgWorld = Snap("#svgWorld");
+						
+						var segmento = svgWorld.line(pos1.x, pos1.y, pos2.x, pos2.y);
+					    
+					    segmento.attr({
+					      stroke: "red",
+					      strokeWidth: this.ancho()
+					    });
 
-					//this.ui.animate({ 'transform' : pos.x + ',' + pos.y },1000);
-					
-					var trazo = Snap("#svgWorld>#trazo");
-					var path = trazo.attr("d") + " L " + pos.x + ' ' + pos.y;
-					
+					};
 
-					trazo.attr("d", path)
+					this.posicion(pos2);
 					
-					return "OK"
+					return pos2;
 				}
 			};
 			
